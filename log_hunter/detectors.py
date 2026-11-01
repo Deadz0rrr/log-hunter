@@ -11,10 +11,10 @@ def detect_bruteforce(events, threshold):
             else:
                 counts[e["ip"]] = 1
 
-    suspicious = {}                       # 1. пустой словарь для находок, ДО цикла
-    for ip, n in counts.items():          # 2. идём по парам ip-счёт
-        if n >= threshold:                # 3. только где неудач не меньше порога
-            suspicious[ip] = n            # 4. кладём пару в находки (вместо print)
+    suspicious = {}                       
+    for ip, n in counts.items():          
+        if n >= threshold:                
+            suspicious[ip] = n            
     return suspicious  
 
 
