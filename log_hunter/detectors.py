@@ -1,3 +1,4 @@
+from datetime import datetime
 from log_hunter.parsers import parse_auth_line
 
 
@@ -17,6 +18,21 @@ def detect_bruteforce(events, threshold):
             suspicious[ip] = n            
     return suspicious  
 
+def collect_fail_times(events, year=2026):
+    """Возвращает {ip: [datetime, ...]} для неудачных входов."""
+    times = {}
+    for e in events:
+        if e["event"] == "failed":
+            t = datetime.strptime(f"{year} {e['ts']}", "%Y %b %d %H:%M:%S")
+            if e["ip"] not in times:
+                times[e["ip"]] = []
+            times[e["ip"]].append(t)
+    return times
+
+
+
+
+
 
 if __name__ == "__main__":
     events = []
@@ -25,7 +41,7 @@ if __name__ == "__main__":
             e = parse_auth_line(line)
             if e is not None:        # None (cron и т.п.) не нужны
                 events.append(e)
-    print(detect_bruteforce(events, 2))
-
+    #print(detect_bruteforce(events, 2))
+    print(collect_fail_times(events))
 
     
