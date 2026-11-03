@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from log_hunter.parsers import parse_auth_line
 
 
@@ -29,7 +29,14 @@ def collect_fail_times(events, year=2026):
             times[e["ip"]].append(t)
     return times
 
-
+def has_burst(times, threshold, window):
+    """True, если есть threshold неудач в пределах window."""
+    times = sorted(times)
+    for i in range(len(times) - threshold + 1):
+        diff = times[i + threshold - 1] - times[i]
+        if diff <= window:
+            return True
+    return False
 
 
 
@@ -43,5 +50,14 @@ if __name__ == "__main__":
                 events.append(e)
     #print(detect_bruteforce(events, 2))
     print(collect_fail_times(events))
-
+    test_times = [
+        datetime(2026, 11, 3, 10, 0),
+        datetime(2026, 11, 3, 10, 30),
+        datetime(2026, 11, 3, 10, 31),
+        datetime(2026, 11, 3, 10, 32),
+        datetime(2026, 11, 3, 10, 33),
+        datetime(2026, 11, 3, 10, 34),
+    ]
+    print(has_burst(test_times, 5, timedelta(minutes=10)))
+    print(has_burst(test_times, 5, timedelta(minutes=2)))
     
