@@ -38,6 +38,15 @@ def has_burst(times, threshold, window):
             return True
     return False
 
+def detect_bruteforce_window(events, threshold, window):
+    """Возвращает список IP, у которых threshold неудач уместились в window."""
+    times = collect_fail_times(events)
+    suspicious = []
+    for ip, ip_times in times.items():
+        if has_burst(ip_times, threshold, window):
+            suspicious.append(ip)
+    return suspicious
+
 
 
 
@@ -60,4 +69,12 @@ if __name__ == "__main__":
     ]
     print(has_burst(test_times, 5, timedelta(minutes=10)))
     print(has_burst(test_times, 5, timedelta(minutes=2)))
+    print(detect_bruteforce_window(events, 5, timedelta(minutes=10)))
+
+
+
+
+
+
+
     
