@@ -10,7 +10,6 @@ def parse_auth_line(line):
         result = m.groupdict()
         result["event"] = "failed"
         return result
-
     a = ACCEPTED_RE.search(line)
     if a:
         result = a.groupdict()
@@ -19,8 +18,29 @@ def parse_auth_line(line):
         
     return None
 
+NGINX_RE = re.compile(
+    r'^(?P<ip>\S+) \S+ \S+ \[(?P<ts>[^\]]+)\] "(?P<method>\S+) (?P<path>\S+) [^"]*" (?P<status>\d{3})'
+)
+
+
+def parse_nginx_line(line):
+    """Разбирает строку access.log nginx в словарь или возвращает None."""
+    m = NGINX_RE.search(line)
+    if m:
+        result = m.groupdict()
+        result["status"] = int(result["status"])
+        return result
+    return None
+
+
+
+
+
+
 if __name__ == "__main__":
-    with open("samples/auth.log", encoding="utf-8") as f:
+    with open("samples/access.log", encoding="utf-8") as f:
         for line in f:
-            result = parse_auth_line(line)
+            result = parse_nginx_line(line)
             print(result)
+
+
