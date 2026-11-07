@@ -47,6 +47,19 @@ def detect_bruteforce_window(events, threshold, window):
             suspicious.append(ip)
     return suspicious
 
+def detect_login_after_fails(events, threshold):
+    counts = {}
+    findings = []                     # сюда складываем тревоги
+    for e in events:
+        if e["event"] == "failed":
+            counts[e["ip"]] = counts.get(e["ip"], 0) + 1
+        elif e["event"] == "accepted":
+            fails = counts.get(e["ip"], 0)        # сколько неудач было у этого IP
+            if fails >= threshold:
+                findings.append({"ip": e["ip"], "user": e["user"], "fails": fails})
+            counts[e["ip"]] = counts[e["ip"]] = 0
+    return findings
+
 
 
 
@@ -55,24 +68,11 @@ if __name__ == "__main__":
     with open("samples/auth.log", encoding="utf-8") as f:
         for line in f:
             e = parse_auth_line(line)
-            if e is not None:        # None (cron и т.п.) не нужны
+            if e is not None:
                 events.append(e)
-    #print(detect_bruteforce(events, 2))
-    print(collect_fail_times(events))
-    test_times = [
-        datetime(2026, 11, 3, 10, 0),
-        datetime(2026, 11, 3, 10, 30),
-        datetime(2026, 11, 3, 10, 31),
-        datetime(2026, 11, 3, 10, 32),
-        datetime(2026, 11, 3, 10, 33),
-        datetime(2026, 11, 3, 10, 34),
-    ]
-    print(has_burst(test_times, 5, timedelta(minutes=10)))
-    print(has_burst(test_times, 5, timedelta(minutes=2)))
-    print(detect_bruteforce_window(events, 5, timedelta(minutes=10)))
 
-
-
+    print("Брутфорс:", detect_bruteforce_window(events, 5, timedelta(minutes=10)))
+    print("Вход после неудач:", detect_login_after_fails(events, 3))
 
 
 
