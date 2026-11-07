@@ -48,16 +48,17 @@ def detect_bruteforce_window(events, threshold, window):
     return suspicious
 
 def detect_login_after_fails(events, threshold):
+    """Возвращает список находок: успешный вход после >= threshold неудач подряд."""
     counts = {}
-    findings = []                     # сюда складываем тревоги
+    findings = []                     
     for e in events:
         if e["event"] == "failed":
             counts[e["ip"]] = counts.get(e["ip"], 0) + 1
         elif e["event"] == "accepted":
-            fails = counts.get(e["ip"], 0)        # сколько неудач было у этого IP
+            fails = counts.get(e["ip"], 0)        
             if fails >= threshold:
                 findings.append({"ip": e["ip"], "user": e["user"], "fails": fails})
-            counts[e["ip"]] = counts[e["ip"]] = 0
+            counts[e["ip"]] = 0
     return findings
 
 
