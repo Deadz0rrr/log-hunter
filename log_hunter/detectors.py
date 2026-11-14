@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
-from log_hunter.parsers import parse_auth_line
-
+from log_hunter.parsers import parse_auth_line, parse_nginx_line
 
 def detect_bruteforce(events, threshold):
     """Возвращает {ip: число неудач} для IP, у которых неудач >= threshold."""
@@ -61,6 +60,24 @@ def detect_login_after_fails(events, threshold):
             counts[e["ip"]] = 0
     return findings
 
+def detect_scan(requests, min_404=5, min_paths=5):
+    """Возвращает список IP, похожих на сканер путей."""
+    stats = {}
+    for r in requests:
+        ip = r["ip"]
+        if ip not in stats:
+            stats[ip] = {"total": 0, "not_found": 0, "paths": set()}
+        stats[ip]["total"] += 1
+        if r["status"] == 404:
+            stats[ip]["not_found"] += 1
+        stats[ip]["paths"].add(r["path"])
+
+    suspicious = []
+    for ip, s in stats.items():
+        if s["not_found"] >= min_404 and len(s["paths"]) >= min_paths:
+            suspicious.append(ip)
+    return suspicious
+
 
 
 
@@ -71,7 +88,14 @@ if __name__ == "__main__":
             e = parse_auth_line(line)
             if e is not None:
                 events.append(e)
-
+    requests = []
+    with open("samples/access.log", encoding="utf-8") as f:
+        for line in f:
+            r = parse_nginx_line(line)
+            if r is not None:
+                requests.append(r)
+    
+    print("Сканирование:", detect_scan(requests))
     print("Брутфорс:", detect_bruteforce_window(events, 5, timedelta(minutes=10)))
     print("Вход после неудач:", detect_login_after_fails(events, 3))
 
